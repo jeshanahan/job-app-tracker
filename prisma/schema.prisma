@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -13,15 +11,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String           @unique
   emailVerified DateTime?
   image         String?
-  passwordHash  String?   // null for OAuth-only users
+  passwordHash  String?
   accounts      Account[]
   sessions      Session[]
   applications  JobApplication[]
+  documents     Document[]
 }
 
 model Account {
@@ -37,7 +36,8 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -53,25 +53,102 @@ model VerificationToken {
   identifier String
   token      String
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
 model JobApplication {
-  id  String  @id @default(cuid())
-  company String
-  role  String
-  status  ApplicationStatus @default(APPLIED)
-  appliedDate DateTime  @default(now())
-  notes String?
-  userId  String
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String               @id @default(cuid())
+  company     String
+  role        String
+  status      ApplicationStatus    @default(APPLIED)
+  appliedDate DateTime             @default(now())
+  notes       String?
+  jobUrl      String?
+  location    String?
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts    Contact[]
+  interviews  Interview[]
+  followUps   FollowUp[]
+  documents   ApplicationDocument[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 }
 
-enum ApplicationStatus{
+enum ApplicationStatus {
+  WISHLIST
   APPLIED
   INTERVIEWING
   OFFER
   REJECTED
+  WITHDRAWN
+}
+
+model Contact {
+  id            String         @id @default(cuid())
+  applicationId String
+  name          String
+  email         String?
+  role          String?
+  notes         String?
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+}
+
+model Interview {
+  id            String         @id @default(cuid())
+  applicationId String
+  scheduledAt   DateTime
+  type          InterviewType  @default(VIDEO)
+  notes         String?
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  ONSITE
+  TECHNICAL
+}
+
+model FollowUp {
+  id            String         @id @default(cuid())
+  applicationId String
+  dueDate       DateTime
+  title         String
+  notes         String?
+  completed     Boolean        @default(false)
+  reminderSent  Boolean        @default(false)
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+}
+
+model Document {
+  id           String                @id @default(cuid())
+  userId       String
+  type         DocumentType          @default(RESUME)
+  filename     String
+  storagePath  String
+  mimeType     String
+  size         Int
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications ApplicationDocument[]
+  createdAt    DateTime              @default(now())
+}
+
+enum DocumentType {
+  RESUME
+  COVER_LETTER
+  OTHER
+}
+
+model ApplicationDocument {
+  applicationId String
+  documentId    String
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  document      Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([applicationId, documentId])
 }

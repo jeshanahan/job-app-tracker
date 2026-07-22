@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Job Application Tracker
 
-## Getting Started
+Track job applications, interviews, contacts, follow-ups, and resumes.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router)
+- Prisma + PostgreSQL
+- Auth.js (email/password + optional GitHub OAuth)
+- Local file uploads (or Vercel Blob if `BLOB_READ_WRITE_TOKEN` is set)
+
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy env vars:
+
+```bash
+cp .env.example .env
+```
+
+Fill in at least:
+
+- `DATABASE_URL`
+- `AUTH_SECRET` (`npx auth secret`)
+
+3. Run migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+4. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Register / login (credentials + optional GitHub)
+- Applications CRUD with status pipeline
+- Search/filter by company, role, status, date
+- Contacts, interviews, and follow-ups on each application
+- Dashboard stats
+- Follow-up calendar
+- Resume/cover letter uploads and linking
+- Daily cron stub at `/api/cron/reminders` (configure `CRON_SECRET` in production)
 
-## Learn More
+## Useful routes
 
-To learn more about Next.js, take a look at the following resources:
+| Route | Purpose |
+|-------|---------|
+| `/dashboard` | Stats overview |
+| `/applications` | List + filters |
+| `/applications/new` | Create |
+| `/applications/[id]` | Edit, status, nested data |
+| `/calendar` | Follow-ups by month |
+| `/documents` | Upload library |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Host on Vercel + Neon Postgres
+- Set the same env vars in the Vercel project
+- `vercel.json` schedules daily reminder cron at 08:00 UTC
+- For Blob uploads in production, add `BLOB_READ_WRITE_TOKEN`

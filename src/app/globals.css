@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Native dropdown menus use the OS/browser popup with a light background.
+   Force dark text so options stay readable in dark mode. */
+select,
+select option {
+  color: #000000;
+  background-color: #ffffff;
+}
+

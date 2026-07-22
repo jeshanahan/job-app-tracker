@@ -7,7 +7,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { success, data, error } = registerSchema.safeParse(body);
   if (!success) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { error: error.issues.map((i) => i.message).join(". ") },
+      { status: 400 }
+    );
   }
 
   const user = await prisma.user.findUnique({ where: { email: data.email } });
